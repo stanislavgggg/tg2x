@@ -39,6 +39,11 @@ SQLite на Volume + фоновый воркер. Отдельный серви�
 
 Тон правится через переменную `BRAND_VOICE` без залезания в код.
 
+Провайдер переключается переменной `LLM_PROVIDER`: `openai` (по умолчанию),
+`anthropic` или `openrouter`. Ключ один и тот же — `LLM_API_KEY`, подставляется
+от выбранного провайдера. Задача здесь простая (ужать готовый текст), поэтому
+мелкой модели хватает: `gpt-4.1-mini` на объёме 1-3 поста в день стоит центы в месяц.
+
 ## Переменные окружения
 
 Полный список — в `.env.example`. Обязательный минимум:
@@ -49,7 +54,7 @@ SQLite на Volume + фоновый воркер. Отдельный серви�
 | `TELEGRAM_STRING_SESSION` | результат `python gen_session.py` локально |
 | `SOURCE_CHAT` | id канала (`-100...`) или `@username` |
 | `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_SECRET` | блок **OAuth 1.0a**, права Read and write |
-| `LLM_API_KEY` | ключ Anthropic (или OpenRouter при `LLM_PROVIDER=openrouter`) |
+| `LLM_API_KEY` | ключ OpenAI (по умолчанию), либо Anthropic/OpenRouter — см. `LLM_PROVIDER` |
 | `REVIEW_BOT_TOKEN`, `REVIEW_CHAT_ID` | если `REVIEW_ENABLED=true` |
 | `DATA_DIR=/data` | Railway Volume |
 | `ADMIN_TOKEN` | пароль для `/admin/*` |
@@ -66,6 +71,8 @@ SQLite на Volume + фоновый воркер. Отдельный серви�
 | `POST_DELAY_SECONDS` | `0` | пауза перед публикацией после одобрения |
 | `REVIEW_TIMEOUT_SECONDS` | `0` | автопубликация, если не нажали кнопку; `0` = ждать |
 | `DRY_RUN` | `false` | всё считает, но в X не постит — для первого запуска |
+| `LLM_PROVIDER` | `openai` | `openai` \| `anthropic` \| `openrouter` |
+| `LLM_MODEL` | `gpt-4.1-mini` | любая модель выбранного провайдера |
 
 ## Запуск на Railway
 

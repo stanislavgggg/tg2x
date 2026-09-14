@@ -110,31 +110,37 @@ async def _call_anthropic(system: str, user: str) -> str:
                 "messages": [{"role": "user", "content": user}],
             },
         )
-        r.raise_for_status()
+        if r.status_code >= 400:
+            raise RuntimeError(f"Anthropic {r.status_code}: {r.text[:300]}")
         data = r.json()
         return "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
 
 
-async def _call_openrouter(system: str, user: str) -> str:
+async def _call_openai_compatible(url: str, system: str, user: str) -> str:
+    """OpenAI Chat Completions и всё, что повторяет его формат (OpenRouter)."""
+    payload = {
+        "model": config.LLM_MODEL,
+        "max_tokens": 500,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+    }
+    headers = {
+        "Authorization": f"Bearer {config.LLM_API_KEY}",
+        "Content-Type": "application/json",
+    }
     async with httpx.AsyncClient(timeout=config.LLM_TIMEOUT) as client:
-        r = await client.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {config.LLM_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": config.LLM_MODEL,
-                "max_tokens": 500,
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-            },
-        )
-        r.raise_for_status()
+        r = await client.post(url, headers=headers, json=payload)
+        # часть свежих моделей OpenAI не принимает max_tokens — просят max_completion_tokens
+        if r.status_code == 400 and "max_completion_tokens" in r.text:
+            payload["max_completion_tokens"] = payload.pop("max_tokens")
+            log.info("модель просит max_completion_tokens, повторяю запрос")
+            r = await client.post(url, headers=headers, json=payload)
+        if r.status_code >= 400:
+            raise RuntimeError(f"LLM {r.status_code}: {r.text[:300]}")
         data = r.json()
-        return data["choices"][0]["message"]["content"]
+        return data["choices"][0]["message"]["content"] or ""
 
 
 def _clean(raw: str) -> str:
@@ -159,9 +165,13 @@ async def rewrite(source_text: str) -> str:
     user = USER_PROMPT.format(text=source_text.strip())
 
     if config.LLM_PROVIDER == "openrouter":
-        raw = await _call_openrouter(system, user)
-    else:
+        raw = await _call_openai_compatible(
+            "https://openrouter.ai/api/v1/chat/completions", system, user)
+    elif config.LLM_PROVIDER == "anthropic":
         raw = await _call_anthropic(system, user)
+    else:
+        raw = await _call_openai_compatible(
+            "https://api.openai.com/v1/chat/completions", system, user)
 
     body = _clean(raw)
     if not body:

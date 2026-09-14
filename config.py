@@ -41,9 +41,9 @@ X_LINK = _str("X_LINK")
 X_HASHTAGS = _str("X_HASHTAGS")
 
 # --- LLM-переписывание ---
-LLM_PROVIDER = _str("LLM_PROVIDER", "anthropic").lower()   # anthropic | openrouter
+LLM_PROVIDER = _str("LLM_PROVIDER", "openai").lower()   # openai | anthropic | openrouter
 LLM_API_KEY = _str("LLM_API_KEY")
-LLM_MODEL = _str("LLM_MODEL", "claude-sonnet-5")
+LLM_MODEL = _str("LLM_MODEL", "gpt-4.1-mini")
 LLM_TIMEOUT = _int("LLM_TIMEOUT", 60)
 # Доп. правила стиля — дописываются в промпт как есть
 BRAND_VOICE = _str(
