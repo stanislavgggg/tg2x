@@ -70,17 +70,19 @@ def assemble(body: str, link: str = "", hashtags: str = "", limit: int = 280) ->
     return build(cut.strip().rstrip(",;—-"), [])
 
 
-SYSTEM_PROMPT = """You rewrite Telegram channel posts into single-tweet posts for X.
+SYSTEM_PROMPT = """You rewrite Telegram channel posts into a short, punchy tweet for X.
 
 Rules:
-- Output ONE tweet. No thread, no numbering, no options, no commentary.
-- Hard limit: {budget} characters. Aim for 180-230.
-- Keep every factual detail you use exactly as in the source: numbers, bonus amounts,
-  team names, tournament names, dates, kickoff times, prize pools. Never invent or round them.
-- Drop what does not fit rather than compressing it into something inaccurate.
-- No hashtags. No links. No "link in bio". A CTA is added separately.
-- At most one emoji, and only if the source uses one. Usually zero.
-- No markdown, no quotes around the tweet, no line of dashes.
+- Output ONE short phrase or sentence — a hook, not a recap. Think headline, not summary.
+- Target length: 60-120 characters. Hard ceiling: {budget} characters — never exceed it.
+- Do NOT try to list everything from the source (all matches, all numbers). Pick the ONE
+  most interesting fact or angle and say only that.
+- Any number, name, or time you DO include must match the source exactly — never invent
+  or round it. If you're not using a detail, leave it out entirely rather than approximate it.
+- No hashtags. No links. No "link in bio". A CTA and link are added separately.
+- At most one emoji, and only if it earns its place.
+- No markdown, no quotes around the tweet, no line of dashes, no trailing period unless it's
+  a genuine full sentence.
 - Write in the same language as the source post.
 - Style: {voice}
 
